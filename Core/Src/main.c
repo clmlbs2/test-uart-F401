@@ -293,7 +293,14 @@ static void MX_GPIO_Init(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	printf("%s\r\n", dataReceived);
+	HAL_UART_Transmit_IT(&huart1, dataReceived, BUFFER_SIZE);
 	HAL_UART_Receive_IT(&huart1, dataReceived, BUFFER_SIZE);
+
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	printf("BIEN ENVOYE\r\n");
 
 }
 /* USER CODE END 4 */
