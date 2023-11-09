@@ -107,7 +107,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t\t\t\t\tDEBUT OK\n\n\n\n\n\n\n\n\n\n\n");
+  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t\t\t\t\tDEBUT\n\n\n\n\n\n\n\n\n\n\n");
   HAL_UART_Receive_IT(&huart1, dataReceived, BUFFER_SIZE);
   while (1)
   {
