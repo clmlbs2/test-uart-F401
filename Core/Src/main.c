@@ -263,37 +263,81 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, led_white_Pin|led_red_Pin|led_green_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(off_GPIO_Port, off_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(led_red_rx_GPIO_Port, led_red_rx_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, walk_Pin|stand_Pin|sit_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : led_white_Pin led_red_Pin led_green_Pin */
-  GPIO_InitStruct.Pin = led_white_Pin|led_red_Pin|led_green_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(on_GPIO_Port, on_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : off_Pin */
+  GPIO_InitStruct.Pin = off_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(off_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : walk_Pin stand_Pin sit_Pin */
+  GPIO_InitStruct.Pin = walk_Pin|stand_Pin|sit_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : led_red_rx_Pin */
-  GPIO_InitStruct.Pin = led_red_rx_Pin;
+  /*Configure GPIO pin : on_Pin */
+  GPIO_InitStruct.Pin = on_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(led_red_rx_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(on_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void analyze_positions(uint8_t *msg)
+{
+	if (strlen((char *)msg) < 2) {
+		printf("Erreur msg trop court\n");
+		return;
+	}
+	if (msg[0] == 'P') {
+		HAL_GPIO_WritePin(sit_GPIO_Port, sit_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(stand_GPIO_Port, stand_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(walk_GPIO_Port, walk_Pin, GPIO_PIN_RESET);
+		switch (msg[1]) {
+			case '1':
+				printf("Assis\n");
+				HAL_GPIO_WritePin(sit_GPIO_Port, sit_Pin, GPIO_PIN_SET);
+				break;
+			case '2':
+				printf("Debout\n");
+				HAL_GPIO_WritePin(stand_GPIO_Port, stand_Pin, GPIO_PIN_SET);
+				break;
+			case '3':
+				printf("Walk\n");
+				HAL_GPIO_WritePin(walk_GPIO_Port, walk_Pin, GPIO_PIN_SET);
+				break;
+			default:
+				printf("Erreur: analyze_positions msg[1] = %c\n", msg[1]);
+				break;
+		}
+	}
+}
+
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	printf("%s\r\n", dataReceived);
+	analyze_positions(dataReceived);
 	HAL_UART_Transmit_IT(&huart1, dataReceived, BUFFER_SIZE);
 	HAL_UART_Receive_IT(&huart1, dataReceived, BUFFER_SIZE);
 
