@@ -46,7 +46,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-#define BUFFER_SIZE 11
+#define BUFFER_SIZE 4
 uint8_t dataReceived[BUFFER_SIZE] = {7};
 uint8_t receiveSize = 0;
 HAL_StatusTypeDef status_rx = 0;
