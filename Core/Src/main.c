@@ -50,6 +50,7 @@ UART_HandleTypeDef huart2;
 uint8_t dataReceived[BUFFER_SIZE] = {7};
 uint8_t receiveSize = 0;
 HAL_StatusTypeDef status_rx = 0;
+uint8_t buttonOnOff = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -108,33 +109,41 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\t\t\t\t\t\t\tDEBUT BUENO\n\n\n\n\n\n\n\n\n\n\n");
+  printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\nDEBUT BUENO\n\n\n\n\n\n\n\n\n\n\n");
   HAL_UART_Receive_IT(&huart1, dataReceived, BUFFER_SIZE);
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  status_rx = HAL_UART_Receive(&huart1, dataReceived, BUFFER_SIZE, 3000);
-//	  	  if (status_rx == HAL_OK)
-//	  	  {
-//	  		  printf("%s\r\n", dataReceived);
-//	  		  HAL_GPIO_WritePin(led_green_GPIO_Port, led_green_Pin, GPIO_PIN_SET);  // Allumer la LED
-//	  		  HAL_Delay(1000);  // Attendre 2s avant de répéter
-//	  		  HAL_GPIO_WritePin(led_green_GPIO_Port, led_green_Pin, GPIO_PIN_RESET);  // Eteindre la LED
-//	  		  HAL_Delay(250);
-//
-//	  	  }
-//	  	  else {
-//	  		 printf("Error\r\n");
-//	  		HAL_GPIO_WritePin(led_red_rx_GPIO_Port, led_red_rx_Pin, GPIO_PIN_SET);  // Allumer la LED
-//	  		HAL_Delay(1000);
-//	  		HAL_GPIO_WritePin(led_red_rx_GPIO_Port, led_red_rx_Pin, GPIO_PIN_RESET);  // Eteindre la LED
-//	  		HAL_Delay(250);
-//	  	  }
-//	        memset(dataReceived, 0, 11); // avant le &
-//	        HAL_Delay(3);
-//
+	  if (HAL_GPIO_ReadPin(on_GPIO_Port, on_Pin) == GPIO_PIN_RESET) {
+		  if (buttonOnOff == 1) {
+			  buttonOnOff = 0;
+			  uint8_t msg[BUFFER_SIZE] = "S0\r\n";
+			  printf("buttonOnOff = 0\r\n");
+			  HAL_UART_Transmit_IT(&huart1, msg, BUFFER_SIZE);
+			  HAL_Delay(500);
+		  } else {
+			  buttonOnOff = 1;
+			  uint8_t msg[BUFFER_SIZE] = "S1\r\n";
+			  printf("buttonOnOff = 1\r\n");
+			  HAL_UART_Transmit_IT(&huart1, msg, BUFFER_SIZE);
+			  HAL_Delay(500);
+		  }
+	  }
+
+//	  printf("EXO_STATUS: %d\r\n", HAL_GPIO_ReadPin(on_GPIO_Port, on_Pin));
+//	  if (HAL_GPIO_ReadPin(on_GPIO_Port, on_Pin) == GPIO_PIN_RESET && buttonOnOff == 0) {
+//		  buttonOnOff = 1;
+//		  uint8_t msg[BUFFER_SIZE] = "S1\r\n";
+//		  printf("exo_status = 1\r\n");
+//		  	HAL_UART_Transmit_IT(&huart1, msg, BUFFER_SIZE);
+//	  } else if (HAL_GPIO_ReadPin(on_GPIO_Port, on_Pin) == GPIO_PIN_SET && buttonOnOff == 1) {
+//		  buttonOnOff = 0;
+//		  uint8_t msg[BUFFER_SIZE] = "S0\r\n";
+//		  printf("exo_status = 0\r\n");
+//		  HAL_UART_Transmit_IT(&huart1, msg, BUFFER_SIZE);
+//	  }
   }
   /* USER CODE END 3 */
 }
@@ -263,25 +272,11 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(off_GPIO_Port, off_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, walk_Pin|stand_Pin|sit_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(on_GPIO_Port, on_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : off_Pin */
-  GPIO_InitStruct.Pin = off_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(off_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : walk_Pin stand_Pin sit_Pin */
   GPIO_InitStruct.Pin = walk_Pin|stand_Pin|sit_Pin;
@@ -292,9 +287,8 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : on_Pin */
   GPIO_InitStruct.Pin = on_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(on_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -326,7 +320,7 @@ void analyze_positions(uint8_t *msg)
 				HAL_GPIO_WritePin(walk_GPIO_Port, walk_Pin, GPIO_PIN_SET);
 				break;
 			default:
-				printf("Erreur: analyze_positions msg[1] = %c\n", msg[1]);
+				printf("Erreur : analyze_positions msg[1] = %c\n", msg[1]);
 				break;
 		}
 	}
